@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "shbackup",
   "version": "${version}",
 
   "name": "Shbackup",
@@ -14,7 +14,7 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/shbackup/icon.png",
 
   "environment": "*",
   "entrypoints": {
@@ -23,13 +23,14 @@
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "shbackup.mixins.json"
   ],
 
   "depends": {
     "fabricloader": ">=0.14.6",
     "fabric": "*",
     "minecraft": "~1.19",
+    "cloth-config2": "*",
     "java": ">=17"
   },
   "suggests": {
