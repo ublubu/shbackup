@@ -57,6 +57,7 @@ public class Backupper {
     }
 
     public void doBackup(MinecraftServer server) {
+        // Don't do this as a ServerTask because that delays the server processing new ticks.
         new Thread(() -> backup(server)).start();
     }
 
