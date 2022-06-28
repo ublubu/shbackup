@@ -1,9 +1,23 @@
-# Fabric Example Mod
+# Shbackup - Minecraft Backup-Script Mod
 
-## Setup
+This mod runs a user-defined bash command on an interval, so you can `rdiff-backup` your world.
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+## Features
+
+- Runs script on user-defined time interval.
+- Runs script on server shutdown.
+- Only runs script if a player has been online since the previous backup.
+- Messages in chat when backup runs.
+  - And an error message when it fails--may pose a security risk if you don't trust your players.
 
 ## License
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+GPL v3
+
+Use at your own risk.
+
+## This mod was inspired by
+
+https://github.com/Szum123321/textile_backup
+
+https://github.com/sefodopo/FabricAutoBackup
