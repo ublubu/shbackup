@@ -6,6 +6,8 @@ import net.minecraft.text.Text;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,6 +16,8 @@ public class Backupper {
 
     private final Lock lock; // Only one backup job at a time.
 
+    private final ExecutorService executor;
+
     private boolean seenPlayerSinceLastBackup = false;
 
     private long nextTime; // When to run the next backup
@@ -21,6 +25,7 @@ public class Backupper {
     public Backupper(Config config) {
         this.config = config;
         this.lock = new ReentrantLock();
+        this.executor = Executors.newSingleThreadExecutor();
         this.nextTime = now() + config.intervalSeconds;
     }
 
@@ -56,7 +61,7 @@ public class Backupper {
 
     // Queues a backup task with the server.
     public void doBackup(MinecraftServer server) {
-        server.send(new ServerTask(1, () -> backup(server)));
+        executor.submit(() -> backup(server));
     }
 
     private void backup(MinecraftServer server) {
