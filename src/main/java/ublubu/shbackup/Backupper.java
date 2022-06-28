@@ -67,6 +67,7 @@ public class Backupper {
             pb.start().waitFor();
         } catch (IOException | InterruptedException e) {
             ShbackupMod.LOGGER.error("running backup command", e);
+            sendMessage(server, String.format("backup failed - '%s'", e.getMessage()));
         }
 
         enableSaving(server);
