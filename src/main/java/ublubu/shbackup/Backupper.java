@@ -16,8 +16,6 @@ public class Backupper {
 
     private final Lock lock; // Only one backup job at a time.
 
-    private final ExecutorService executor;
-
     private boolean seenPlayerSinceLastBackup = false;
 
     private long nextTime; // When to run the next backup
@@ -25,7 +23,6 @@ public class Backupper {
     public Backupper(Config config) {
         this.config = config;
         this.lock = new ReentrantLock();
-        this.executor = Executors.newSingleThreadExecutor();
         this.nextTime = now() + config.intervalSeconds;
     }
 
@@ -49,7 +46,7 @@ public class Backupper {
         if (lock.tryLock()) {
             try {
                 // The server just saved everything, so we only need to run the script now.
-                // If we run the entire backup sequence, the server will hang.
+                // If we run the entire backup sequence, we will hang waiting for the (stopped) server.
                 sendMessage(server, "starting backup");
                 unsafe_runScript(server);
                 sendMessage(server, "finished backup");
@@ -59,9 +56,8 @@ public class Backupper {
         } // If the last backup is still running, skip this one.
     }
 
-    // Queues a backup task with the server.
     public void doBackup(MinecraftServer server) {
-        executor.submit(() -> backup(server));
+        new Thread(() -> backup(server)).start();
     }
 
     private void backup(MinecraftServer server) {
