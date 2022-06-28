@@ -40,22 +40,29 @@ public class Backupper {
     }
 
     public void shutdown(MinecraftServer server) {
-        this.doBackup(server);
+        // Attempt the backup immediately. Queued server tasks do not run after STOPPED event.
+        this.backup(server);
     }
 
+    // Queues a backup task with the server.
     public void doBackup(MinecraftServer server) {
         server.send(new ServerTask(1, () -> {
-            if (lock.tryLock()) {
-                try {
-                    backup(server);
-                } finally {
-                    lock.unlock();
-                }
-            } // If the last backup is still running, skip this one.
+            backup(server);
         }));
     }
 
     private void backup(MinecraftServer server) {
+        if (lock.tryLock()) {
+            try {
+                unsafe_backup(server);
+            } finally {
+                lock.unlock();
+            }
+        } // If the last backup is still running, skip this one.
+    }
+
+    // This is not protected by a mutex.
+    private void unsafe_backup(MinecraftServer server) {
         sendMessage(server, "starting backup");
         disableSaving(server);
         server.getPlayerManager().saveAllPlayerData();
