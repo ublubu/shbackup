@@ -41,14 +41,22 @@ public class Backupper {
 
     public void shutdown(MinecraftServer server) {
         // Attempt the backup immediately. Queued server tasks do not run after STOPPED event.
-        this.backup(server);
+        if (lock.tryLock()) {
+            try {
+                // The server just saved everything, so we only need to run the script now.
+                // If we run the entire backup sequence, the server will hang.
+                sendMessage(server, "starting backup");
+                unsafe_runScript(server);
+                sendMessage(server, "finished backup");
+            } finally {
+                lock.unlock();
+            }
+        } // If the last backup is still running, skip this one.
     }
 
     // Queues a backup task with the server.
     public void doBackup(MinecraftServer server) {
-        server.send(new ServerTask(1, () -> {
-            backup(server);
-        }));
+        server.send(new ServerTask(1, () -> backup(server)));
     }
 
     private void backup(MinecraftServer server) {
@@ -68,6 +76,14 @@ public class Backupper {
         server.getPlayerManager().saveAllPlayerData();
         server.save(false, true, true);
 
+        unsafe_runScript(server);
+
+        enableSaving(server);
+        sendMessage(server, "finished backup");
+    }
+
+    // This is not protected by a mutex.
+    private void unsafe_runScript(MinecraftServer server) {
         var pb = new ProcessBuilder().command("sh", "-c", config.cmd).redirectErrorStream(true);
         pb.environment().put("WORLD", server.getSaveProperties().getLevelName());
         try {
@@ -76,9 +92,6 @@ public class Backupper {
             ShbackupMod.LOGGER.error("running backup command", e);
             sendMessage(server, String.format("backup failed - '%s'", e.getMessage()));
         }
-
-        enableSaving(server);
-        sendMessage(server, "finished backup");
     }
 
     public static void disableSaving(MinecraftServer server) {
