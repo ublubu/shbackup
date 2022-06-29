@@ -1,7 +1,11 @@
 package ublubu.shbackup;
 
+import net.minecraft.network.message.MessageType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -44,9 +48,9 @@ public class Backupper {
             try {
                 // The server just saved everything, so we only need to run the script now.
                 // If we run the entire backup sequence, we will hang waiting for the (stopped) server.
-                sendMessage(server, "starting backup");
+                sendHappyMessage(server, "starting");
                 unsafe_runScript(server);
-                sendMessage(server, "finished backup");
+                sendHappyMessage(server, "finished");
             } finally {
                 lock.unlock();
             }
@@ -70,7 +74,7 @@ public class Backupper {
 
     // This is not protected by a mutex.
     private void unsafe_backup(MinecraftServer server) {
-        sendMessage(server, "starting backup");
+        sendHappyMessage(server, "starting");
         disableSaving(server);
 
         // Don't bother flushing to disk.
@@ -86,7 +90,7 @@ public class Backupper {
         unsafe_runScript(server);
 
         enableSaving(server);
-        sendMessage(server, "finished backup");
+        sendHappyMessage(server, "finished");
     }
 
     // This is not protected by a mutex.
@@ -97,7 +101,7 @@ public class Backupper {
             pb.start().waitFor();
         } catch (IOException | InterruptedException e) {
             ShbackupMod.LOGGER.error("running backup command", e);
-            sendMessage(server, String.format("backup failed - '%s'", e.getMessage()));
+            sendAngryMessage(server, String.format("backup failed - '%s'", e.getMessage()));
         }
     }
 
@@ -119,8 +123,28 @@ public class Backupper {
         return Instant.now().getEpochSecond();
     }
 
-    public static void sendMessage(MinecraftServer server, String msg) {
-        var fullText = String.format("Shbackup %s: %s", Instant.now(), msg);
-        server.getCommandSource().sendFeedback(Text.literal(fullText), false);
+    public static void sendHappyMessage(MinecraftServer server, String msg) {
+        sendMessage(server, msg, Formatting.GREEN);
+    }
+
+    public static void sendAngryMessage(MinecraftServer server, String msg) {
+        sendMessage(server, msg, Formatting.RED);
+    }
+
+    public static void sendMessage(MinecraftServer server, String msg, Formatting color) {
+        var showTime = new HoverEvent(
+                HoverEvent.Action.SHOW_TEXT,
+                Text.literal(Instant.now().toString())
+        );
+        var senderStyle = Style.EMPTY.withColor(Formatting.GRAY).withItalic(true);
+        var msgStyle = Style.EMPTY.withColor(color).withItalic(true).withHoverEvent(showTime);
+
+        var fullText = Text.literal(ShbackupMod.MOD_ID).setStyle(senderStyle)
+                .append(Text.literal(msg).setStyle(msgStyle));
+
+        for (var player : server.getPlayerManager().getPlayerList()) {
+            player.sendMessage(fullText, MessageType.TELLRAW_COMMAND);
+        }
+        server.getCommandSource().sendFeedback(fullText, false);
     }
 }
