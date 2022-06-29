@@ -1,3 +1,5 @@
+<img src="./src/main/resources/assets/shbackup/icon.png" align="right" width="128px"/>
+
 # Shbackup - Minecraft Backup-Script Mod
 
 This mod runs a user-defined bash command on an interval, so you can `rdiff-backup` your world.
