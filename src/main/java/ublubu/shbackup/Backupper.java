@@ -1,13 +1,10 @@
 package ublubu.shbackup;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerTask;
 import net.minecraft.text.Text;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -75,8 +72,16 @@ public class Backupper {
     private void unsafe_backup(MinecraftServer server) {
         sendMessage(server, "starting backup");
         disableSaving(server);
-        server.getPlayerManager().saveAllPlayerData();
-        server.save(false, true, true);
+
+        // Don't bother flushing to disk.
+        // If we do it as a ServerTask, it lags the server.
+        // If we do it in a separate thread, it can crash, since it's not threadsafe.
+        // Worst case, we won't back up recently queued updates until later.
+        //
+        /* i.e. We aren't doing this:
+        >> server.getPlayerManager().saveAllPlayerData();
+        >> server.save(false, true, true);
+         */
 
         unsafe_runScript(server);
 
