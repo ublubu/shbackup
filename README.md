@@ -14,6 +14,11 @@ This mod runs a user-defined bash command on an interval, so you can `rdiff-back
 - Doesn't force the server to flush saves to disk before the backup.
     - _Pro:_ Less lag during backups.
     - _Con:_ Recent changes may not be included until a later backup. (worst case, until server restart)
+- Tiny codebase. 3 classes, ~200 LOC.
+
+## Dependencies
+
+https://github.com/shedaniel/cloth-config
 
 ## License
 
