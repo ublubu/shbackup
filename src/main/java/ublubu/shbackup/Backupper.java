@@ -139,7 +139,7 @@ public class Backupper {
         var senderStyle = Style.EMPTY.withColor(Formatting.GRAY).withItalic(true);
         var msgStyle = Style.EMPTY.withColor(color).withItalic(true).withHoverEvent(showTime);
 
-        var fullText = Text.literal(ShbackupMod.MOD_ID).setStyle(senderStyle)
+        var fullText = Text.literal(String.format("%s: ", ShbackupMod.MOD_ID)).setStyle(senderStyle)
                 .append(Text.literal(msg).setStyle(msgStyle));
 
         for (var player : server.getPlayerManager().getPlayerList()) {
