@@ -43,11 +43,13 @@ public class Backupper {
     }
 
     public void shutdown(MinecraftServer server) {
-        // Attempt the backup immediately. Queued server tasks do not run after STOPPED event.
+        // Attempt the backup immediately. Queued server tasks do not run after STOPPED
+        // event.
         if (lock.tryLock()) {
             try {
                 // The server just saved everything, so we only need to run the script now.
-                // If we run the entire backup sequence, we will hang waiting for the (stopped) server.
+                // If we run the entire backup sequence, we will hang waiting for the (stopped)
+                // server.
                 sendHappyMessage(server, "starting");
                 unsafe_runScript(server);
                 sendHappyMessage(server, "finished");
@@ -58,7 +60,8 @@ public class Backupper {
     }
 
     public void doBackup(MinecraftServer server) {
-        // Don't do this as a ServerTask because that delays the server processing new ticks.
+        // Don't do this as a ServerTask because that delays the server processing new
+        // ticks.
         new Thread(() -> backup(server)).start();
     }
 
@@ -82,9 +85,10 @@ public class Backupper {
         // If we do it in a separate thread, it can crash, since it's not threadsafe.
         // Worst case, we won't back up recently queued updates until later.
         //
-        /* i.e. We aren't doing this:
-        >> server.getPlayerManager().saveAllPlayerData();
-        >> server.save(false, true, true);
+        /*
+         * i.e. We aren't doing this:
+         * >> server.getPlayerManager().saveAllPlayerData();
+         * >> server.save(false, true, true);
          */
 
         unsafe_runScript(server);
@@ -134,8 +138,7 @@ public class Backupper {
     public static void sendMessage(MinecraftServer server, String msg, Formatting color) {
         var showTime = new HoverEvent(
                 HoverEvent.Action.SHOW_TEXT,
-                Text.literal(Instant.now().toString())
-        );
+                Text.literal(Instant.now().toString()));
         var senderStyle = Style.EMPTY.withColor(Formatting.GRAY).withItalic(true);
         var msgStyle = Style.EMPTY.withColor(color).withItalic(true).withHoverEvent(showTime);
 
@@ -143,8 +146,8 @@ public class Backupper {
                 .append(Text.literal(msg).setStyle(msgStyle));
 
         for (var player : server.getPlayerManager().getPlayerList()) {
-            player.sendMessage(fullText, MessageType.TELLRAW_COMMAND);
+            player.sendMessage(fullText, true);
         }
-        server.getCommandSource().sendFeedback(fullText, false);
+        server.getCommandSource().sendFeedback(() -> fullText, false);
     }
 }
