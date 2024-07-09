@@ -28,16 +28,26 @@ public class Backupper {
     }
 
     public synchronized void tick(MinecraftServer server) {
-        // Should we attempt a backup?
-        if (now() < nextTime || !seenPlayerSinceLastBackup) {
-            // No, we should not.
+        // If it's not time to do anything yet:
+        if (now() < nextTime) {
+            // Note whether we've seen any players.
             seenPlayerSinceLastBackup = seenPlayerSinceLastBackup
-                    || server.getPlayerManager().getCurrentPlayerCount() > 0;
+                || server.getPlayerManager().getCurrentPlayerCount() > 0;
             return;
         }
 
-        // Yes, we should.
-        nextTime += config.intervalSeconds;
+        // We've completed the interval. Set the next interval.
+        nextTime = now() + config.intervalSeconds;
+
+        // It's time to do things. Do we need to do anything?
+        if (!seenPlayerSinceLastBackup) {
+            // No players, no activity to back up.
+            return;
+        }
+
+        // 'doBackup' may skip the backup if a backup is already running (from the last interval).
+        // Ideally, we wouldn't reset 'seenPlayerSinceLastBackup' if the backup was skipped.
+        // I'm leaving it like this because it's probably not an issue in practice.
         seenPlayerSinceLastBackup = false;
         this.doBackup(server);
     }
